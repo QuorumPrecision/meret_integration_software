@@ -1,0 +1,5 @@
+*.csv
+build
+dist
+__pycache__
+bap2_logger.spec
