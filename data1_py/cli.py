@@ -6,30 +6,11 @@ import struct
 from datetime import datetime
 from pprint import pprint
 import sys
-import serial
 import data1
-import serial.tools.list_ports
-
-
-def list_serial_ports():
-    for port in serial.tools.list_ports.comports():
-        print(port.vid)
-        print(port.interface)
-        print(port.description)
-        print(port.device)
-        print(port.name)
-
-
-def get_pressure(ser, req):
-    ser.write(req)
-    ret = ser.read(11)
-    value = struct.unpack("f", ret[6:10])[0]
-    return value
-
 
 if __name__ == "__main__":
     data1.checksum(356)
-    list_serial_ports()
+    data1.list_serial_ports()
 
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--port", help="Serial port", required=True)
@@ -44,17 +25,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     port = args.port
-    serial_baud = 9600
 
-    print(
-        "Connecting using serial port {}, parity: EVEN, baud: {}, cadence of measurement: {}s".format(
-            port, serial_baud, args.cadence
-        )
-    )
-    uart_timeout = 1
-    ser = serial.Serial(
-        port=port, baudrate=serial_baud, parity=serial.PARITY_EVEN, timeout=uart_timeout
-    )
+    ser = data1.connect_serial(port="COM4")
 
     addr = 255
 
@@ -65,7 +37,6 @@ if __name__ == "__main__":
     r['meno_programu'] =                bytearray((0x55, addr, 0x00, 0x06, 0x03, 0xa3))
     r['datum_poslednej_konfiguracie'] = bytearray((0x55, addr, 0x00, 0x06, 0x0b, 0x9b)) #returns HH:MM:SS (3 bytes)
     r['archive_interval_type'] =        bytearray((0x55, addr, 0x00, 0x07, 0x1e, 0x25, 0x62))
-    r['tlak'] =                         bytearray((0x55, addr, 0x00, 0x08, 0x05, 0x10, 0x00, 0x8f))
     r['vycitanie_archivu_1'] =          bytearray((0x55, addr, 0x00, 0x0b, 0x1e, 0x23, 0x00, 0xa0, 0x03, 0x45, 0x78)) # vzdy sa vratilo 147 bytov v packete
     r['vycitanie_archivu_2'] =          bytearray((0x55, addr, 0x00, 0x0b, 0x1e, 0x23, 0x00, 0x60, 0x0c, 0x45, 0xaf)) # adresa ako float (2246) a iterovat po 140 bytes
     r['vycitanie_archivu_3'] =          bytearray((0x55, addr, 0x00, 0x0b, 0x1e, 0x23, 0x00, 0x20, 0x15, 0x45, 0xe6)) # kazda odpoved ma 14 zaznamov - su ocislovane a kazdy zaznam ma por cislo (1B) a zaznam 9by
@@ -73,7 +44,11 @@ if __name__ == "__main__":
     # cislovanie v archivoch - 1_ zacina 0x32, 2 zacina 0x04, 3 zacina 0x12, 4 zacina 0x20 t.j. po precitani 64 zaznamov zacina cislovanie od zaciatku
     # fmt: on
 
-    print(get_pressure(ser, r["tlak"]))
+    while True:
+        try:
+            print(data1.get_pressure(ser))
+        except Exception as e:
+            pass
 
     while True:
         for k in r:
