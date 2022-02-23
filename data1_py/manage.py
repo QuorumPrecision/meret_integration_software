@@ -8,6 +8,16 @@ from pprint import pprint
 import sys
 import serial
 import data1
+import serial.tools.list_ports
+
+
+def list_serial_ports():
+    for port in serial.tools.list_ports.comports():
+        print(port.vid)
+        print(port.interface)
+        print(port.description)
+        print(port.device)
+        print(port.name)
 
 
 def get_pressure(ser, req):
@@ -19,6 +29,7 @@ def get_pressure(ser, req):
 
 if __name__ == "__main__":
     data1.checksum(356)
+    list_serial_ports()
 
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--port", help="Serial port", required=True)
