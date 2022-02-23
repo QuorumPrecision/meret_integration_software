@@ -7,6 +7,7 @@ from datetime import datetime
 from pprint import pprint
 import sys
 import serial
+import data1
 
 
 def get_pressure(ser, req):
@@ -17,6 +18,8 @@ def get_pressure(ser, req):
 
 
 if __name__ == "__main__":
+    data1.checksum(356)
+
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--port", help="Serial port", required=True)
     parser.add_argument("--address", help="Device address", default=0)
