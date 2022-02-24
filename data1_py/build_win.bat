@@ -1,0 +1,1 @@
+start cmd /k "pyinstaller --onefile data1_archive_gui.py && move dist\data1_archive_gui.exe .\BIN\"

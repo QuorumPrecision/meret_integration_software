@@ -57,7 +57,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+400+400")
-win.title("Data1-PY 2022")
+win.title("Data1-PY 1.0.0")
 win.resizable(False, False)
 
 
