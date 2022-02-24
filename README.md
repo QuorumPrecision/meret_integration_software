@@ -1,6 +1,6 @@
 ## bap2_logger ##
 
-For connecting BAP2 to PC using USB as serial port and logging data into CSV file
+For connecting BAP2 to PC using USB as serial port and logging data into CSV file. No GUI. CLI only.
 
 ## tsi_to_data1_archive ##
 
@@ -9,4 +9,4 @@ for some legacy implementations.
 
 ## data1 ##
 
-Configuration and archive utilities for old Meret MAM sensors made in 2006 - 2010 at least
+Configuration and archive utilities (with GUI) for old Meret MAM sensors made in 2006 - 2010 at least
