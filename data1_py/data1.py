@@ -5,6 +5,7 @@ import serial.tools.list_ports
 import struct
 from pprint import pprint
 import math
+import datetime
 
 
 def checksum(by):
@@ -23,6 +24,118 @@ def get_pressure(ser, addr=255):
     ret = ser.read(11)
     value = struct.unpack("f", ret[6:10])[0]
     return value
+
+
+def get_time(ser, addr=255):
+    req = bytearray((0x55, addr, 0x00, 0x07, 0x1E, 0x24))
+    req = req + checksum(req)
+    for r in req:
+        print(" " + hex(r), end="")
+    print()
+    ser.write(req)
+    ret = ser.read(15)
+    for r in ret:
+        print(" " + hex(r), end="")
+    hour = ret[6]
+    minute = ret[7]
+    second = ret[8]
+    day = ret[9]
+    month = ret[10]
+    year = struct.unpack(">H", ret[11:13])[0]
+    out = "{}:{}:{} {}.{}. {}".format(hour, minute, second, day, month, year)
+    return out
+
+
+def syn_time_from_os(ser, addr=255):
+    now = datetime.datetime.now()
+    req = bytearray(
+        (
+            0x55,
+            addr,
+            0x00,
+            0x0F,
+            0x1F,
+            0x24,
+            now.hour,
+            now.minute,
+            now.second,
+            now.day,
+            now.month,
+        )
+    )
+    req = req + bytearray(struct.pack(">H", now.year)) + bytearray((0x0,))
+    req = req + checksum(req)
+    for r in req:
+        print(" " + hex(r), end="")
+    print()
+    ser.write(req)
+    ret = ser.read(7)
+    for r in ret:
+        print(" " + hex(r), end="")
+    print()
+
+
+def set_wakeup_time(ser, addr=255):
+    print("Setting wakeup time for first record")
+    now = datetime.datetime.now()
+    req = bytearray(
+        (
+            0x55,
+            addr,
+            0x00,
+            0x0F,
+            0x1F,
+            0x26,
+            now.hour,
+            now.minute,
+            now.second + 5,
+            now.day,
+            now.month,
+        )
+    )
+    req = req + bytearray(struct.pack(">H", now.year)) + bytearray((0x0,))
+    req = req + checksum(req)
+    for r in req:
+        print(" " + hex(r), end="")
+    print()
+    ser.write(req)
+    ret = ser.read(7)
+    for r in ret:
+        print(" " + hex(r), end="")
+    print()
+
+
+def set_archive_interval(ser, addr=255, hours=0, minutes=0, seconds=5):
+    print("Setting archive interval (how often to take a reading and save to archive)")
+    print(
+        "Setting to hours: {} minutes: {} seconds: {}".format(hours, minutes, seconds)
+    )
+    req = bytearray((0x55, addr, 0x00, 0x0A, 0x1F, 0x25, hours, minutes, seconds))
+    req = req + checksum(req)
+    for r in req:
+        print(" " + hex(r), end="")
+    print()
+    ser.write(req)
+    ret = ser.read(7)
+    for r in ret:
+        print(" " + hex(r), end="")
+    print()
+
+
+def get_archive_interval(ser, addr=255):
+    print("Get archive interval (cadence)")
+    req = bytearray((0x55, addr, 0x00, 0x07, 0x1E, 0x25))
+    req = req + checksum(req)
+    for r in req:
+        print(" " + hex(r), end="")
+    print()
+    ser.write(req)
+    ret = ser.read(10)
+    for r in ret:
+        print(" " + hex(r), end="")
+    out = {"hrs": ret[6], "mins": ret[7], "secs": ret[8]}
+    pprint(out)
+    return out
 
 
 def delete_device_archive(ser, addr=255):
