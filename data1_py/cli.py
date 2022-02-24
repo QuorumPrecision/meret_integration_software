@@ -9,7 +9,6 @@ import sys
 import data1
 
 if __name__ == "__main__":
-    data1.checksum(356)
     data1.list_serial_ports()
 
     parser = argparse.ArgumentParser(description="")
@@ -44,16 +43,7 @@ if __name__ == "__main__":
     # cislovanie v archivoch - 1_ zacina 0x32, 2 zacina 0x04, 3 zacina 0x12, 4 zacina 0x20 t.j. po precitani 64 zaznamov zacina cislovanie od zaciatku
     # fmt: on
 
-    while True:
-        try:
-            print(data1.get_pressure(ser))
-        except Exception as e:
-            pass
+    archive = data1.read_archive(ser)
 
-    while True:
-        for k in r:
-            ser.write(r[k])
-            ret = ser.read(100)
-            print(k)
-            print(ret)
-            time.sleep(args.cadence - uart_timeout)
+    for r in archive:
+        print(r["value"])
