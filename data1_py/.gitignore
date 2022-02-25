@@ -4,3 +4,4 @@ build
 dist
 data1_archive_gui.spec
 BIN
+archive_data.json

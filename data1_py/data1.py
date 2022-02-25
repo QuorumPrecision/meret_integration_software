@@ -151,17 +151,23 @@ def list_serial_ports():
     SerialsList = []
     for port in serial.tools.list_ports.comports():
         SerialsList.append(port.device)
-        # print(port.vid)
-        # print(port.interface)
-        # print(port.description)
-        # print(port.device)
-        # print(port.name)
+        print(port.vid)
+        print(port.hwid)
+        print(port.pid)
+        print(port.serial_number)
+        print(port.location)
+        print(port.manufacturer)
+        print(port.product)
+        print(port.interface)
+        print(port.description)
+        print(port.device)
+        print(port.name)
     return SerialsList
 
 
 def connect_serial(port="COM4"):
     print("Connecting to serial port {}".format(port))
-    ser = serial.Serial(port=port, baudrate=9600, parity=serial.PARITY_EVEN, timeout=1)
+    ser = serial.Serial(port=port, baudrate=9600, parity=serial.PARITY_NONE, timeout=1, write_timeout=5)
     return ser
 
 
@@ -170,8 +176,14 @@ def get_samples_count(ser, device_addr=255):
     req = bytearray((0x55, device_addr, 0x00, 0x07, 0x1E, 0x22))
     req = req + checksum(req)
     pprint(req)
-    ser.write(req)
+    try:
+        ser.write(req)
+    except Exception as e:
+        print("Unable to download data from this COM port!")
+        raise
+    print("get_samples_count: Waiting for response from device")
     ret = ser.read(11)
+    print("Returned")
     samples = struct.unpack("f", ret[6:10])[0]
     print(samples)
     return samples
@@ -179,7 +191,10 @@ def get_samples_count(ser, device_addr=255):
 
 def read_archive(ser):
     archive = []
-    samples_available = get_samples_count(ser)
+    try:
+        samples_available = get_samples_count(ser)
+    except Exception as e:
+        raise
     segments = int(math.ceil(samples_available / 14.0))
     print("Available records: {} Segments: {}".format(samples_available, segments))
     mem_addr = 0

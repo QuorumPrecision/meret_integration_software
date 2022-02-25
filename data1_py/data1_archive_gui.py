@@ -7,6 +7,7 @@ import data1
 import serial
 import sys
 import json
+from pprint import pprint
 
 connect_serial_state = False
 ser = None
@@ -15,8 +16,16 @@ ser = None
 def download_and_save_archive():
     global ser
     status_text.set("Stahujem data zo zariadenia...")
-    archive_data = data1.read_archive(ser)
-    json_file_name = "saved_archives/archive_data.json"
+    try:
+        archive_data = data1.read_archive(ser)
+    except Exception as e:
+        messagebox.showerror(
+            "Chyba!", "Nepodarilo sa stiahnut archiv. Mate spravne nastaveny COM port?"
+        )
+        print("Nepodarilo sa stiahnut archiv!")
+        disconnect_serial()
+        return
+    json_file_name = "archive_data.json"
     with open(json_file_name, "w") as outfile:
         json.dump(archive_data, outfile)
     status_text.set("{}".format(json_file_name))
@@ -39,14 +48,20 @@ def connect_serial():
     print("Connecting to selected serial port {}".format(serial_selected.get()))
     ser = data1.connect_serial(port=serial_selected.get())
     status_text.set("Pripojeny!")
+    print("Connected!")
     button_archive.config(state="normal")
+    button_connect.config(state="disabled")
+    button_disconnect.config(state="normal")
 
 
 def disconnect_serial():
     global ser
     ser.close()
     status_text.set("Odpojeny!")
+    print("Disconnected!")
     button_archive.config(state="disable")
+    button_disconnect.config(state="disabled")
+    button_connect.config(state="normal")
 
 
 SerialsList = data1.list_serial_ports()
@@ -57,7 +72,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+400+400")
-win.title("Data1 Archive Reader 2.0.0")
+win.title("Data1 Archive Reader 2.0.1")
 win.resizable(False, False)
 
 
@@ -79,6 +94,7 @@ button_disconnect = tk.Button(
     frame_connection, text="Odpojit", command=disconnect_serial
 )
 button_disconnect.grid(column=1, row=1, padx=10, pady=10, sticky="W")
+button_disconnect.config(state="disabled")
 
 
 button_archive = tk.Button(
