@@ -1,7 +1,4 @@
-from email import message
-from email.policy import default
 import tkinter as tk
-from turtle import width
 from tkinter import messagebox
 import data1
 import serial
