@@ -8,6 +8,7 @@ import serial
 import sys
 import json
 from pprint import pprint
+import tkinter.font
 
 connect_serial_state = False
 ser = None
@@ -71,8 +72,8 @@ if len(SerialsList) < 1:
 
 
 win = tk.Tk()
-win.geometry("+400+400")
-win.title("Data1 Archive Reader 2.0.1")
+win.geometry("+100+100")
+win.title("Data1 Archive Reader 2.0.2")
 win.resizable(False, False)
 
 
@@ -96,6 +97,7 @@ button_disconnect = tk.Button(
 button_disconnect.grid(column=1, row=1, padx=10, pady=10, sticky="W")
 button_disconnect.config(state="disabled")
 
+buttonFont = tkinter.font.Font(size=20, weight="bold")
 
 button_archive = tk.Button(
     frame_archive,
@@ -103,6 +105,9 @@ button_archive = tk.Button(
     command=download_and_save_archive,
     width=20,
     height=5,
+    font=buttonFont,
+    fg="red",
+    borderwidth=10
 )
 button_archive.config(state="disable")
 button_archive.grid(column=0, row=0, padx=10, pady=10)
