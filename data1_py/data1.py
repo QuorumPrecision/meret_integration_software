@@ -6,7 +6,8 @@ import struct
 from pprint import pprint
 import math
 import datetime
-
+import tkinter as tk
+from tkinter import ttk
 
 def checksum(by):
     sum = 0
@@ -203,11 +204,20 @@ def read_archive(ser):
     print("Available records: {} Segments: {}".format(samples_available, segments))
     mem_addr = 0
     seg = 0
+    popup = tk.Toplevel()
+    popup.title("Stahujem archiv...")
+    progress_var = tk.DoubleVar()
+    progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=segments, length=800)
+    progress_bar.grid(row=1, column=0)
+    popup.pack_slaves()
     while seg <= segments:
         print("Reading segment {} / {}".format(seg, segments))
         archive.extend(read_bytes_from_memory(ser, mem_addr))
         mem_addr = mem_addr + 140
         seg = seg + 1
+        popup.update()
+        progress_var.set(seg)
+    popup.destroy
     return archive
 
 

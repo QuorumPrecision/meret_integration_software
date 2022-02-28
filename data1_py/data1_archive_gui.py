@@ -21,6 +21,7 @@ def download_and_save_archive():
     try:
         archive_data = data1.read_archive(ser)
     except Exception as e:
+        print(str(e))
         messagebox.showerror(
             "Chyba!", "Nepodarilo sa stiahnut archiv. Mate spravne nastaveny COM port?"
         )
