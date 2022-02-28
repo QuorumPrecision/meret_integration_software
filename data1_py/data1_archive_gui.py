@@ -41,6 +41,16 @@ def download_and_save_archive():
         print("Data zostavaju v zariadeni")
 
 
+def get_and_show_value():
+    global ser
+    try:
+        time_str = data1.get_time(ser)
+        current_value = round(data1.get_pressure(ser), 3)
+    except Exception as e:
+        value_text.set("Problem nacitania!!".format(str(e)))
+    value_text.set("{} @ {}".format(current_value, time_str))
+
+
 def connect_serial():
     global ser
     print("Connecting to selected serial port {}".format(serial_selected.get()))
@@ -73,6 +83,8 @@ win.geometry("+100+100")
 win.title("Data1 Archive Reader 2.0.2")
 win.resizable(False, False)
 
+buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
+buttonFontMedium = tkinter.font.Font(size=15, weight="bold")
 
 frame_connection = tk.LabelFrame(win, text="Pripojenie")
 frame_connection.grid(column=0, row=0, padx=10, pady=10, sticky="N")
@@ -82,19 +94,34 @@ frame_archive.grid(column=1, row=0, padx=10, pady=10, sticky="N")
 
 serial_selected = tk.StringVar(frame_connection)
 serials_dropdown = tk.OptionMenu(frame_connection, serial_selected, *SerialsList)
+serials_dropdown.config(font=buttonFontMedium)
 serials_dropdown.config(width=30)
+menu = win.nametowidget(serials_dropdown.menuname)
+menu.config(font=buttonFontMedium)
 serials_dropdown.grid(column=0, row=0, padx=10, pady=10, sticky="W", columnspan=2)
 
-button_connect = tk.Button(frame_connection, text="Pripojit", command=connect_serial)
+button_connect = tk.Button(
+    frame_connection,
+    text="Pripojit",
+    command=connect_serial,
+    width=15,
+    height=3,
+    font=buttonFontMedium,
+)
 button_connect.grid(column=0, row=1, padx=10, pady=10, sticky="W")
 
 button_disconnect = tk.Button(
-    frame_connection, text="Odpojit", command=disconnect_serial
+    frame_connection,
+    text="Odpojit",
+    command=disconnect_serial,
+    width=15,
+    height=3,
+    font=buttonFontMedium,
 )
 button_disconnect.grid(column=1, row=1, padx=10, pady=10, sticky="W")
 button_disconnect.config(state="disabled")
 
-buttonFont = tkinter.font.Font(size=20, weight="bold")
+buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
 
 button_archive = tk.Button(
     frame_archive,
@@ -102,9 +129,9 @@ button_archive = tk.Button(
     command=download_and_save_archive,
     width=20,
     height=5,
-    font=buttonFont,
+    font=buttonFontLarge,
     fg="red",
-    borderwidth=10
+    borderwidth=10,
 )
 button_archive.config(state="disable")
 button_archive.grid(column=0, row=0, padx=10, pady=10)
@@ -112,11 +139,34 @@ button_archive.grid(column=0, row=0, padx=10, pady=10)
 
 status_text = tk.StringVar(win)
 status_text.set("Cakam na pripojenie...")
-status_label = tk.Entry(win, textvariable=status_text, state="disable")
+status_label = tk.Entry(
+    win,
+    textvariable=status_text,
+    state="disable",
+    width=40,
+    font=buttonFontMedium,
+)
 status_label.grid(column=1, row=1, padx=10, pady=10)
 
 
-button_close = tk.Button(win, text="Zavriet", command=win.destroy)
-button_close.grid(column=0, row=1, padx=10, pady=10)
+value_text = tk.StringVar(win)
+value_text.set("")
+value_label = tk.Entry(
+    win, textvariable=value_text, state="disable", width=40, font=buttonFontMedium
+)
+value_label.grid(column=1, row=2, padx=10, pady=10)
+button_value = tk.Button(
+    win,
+    text="Nacitat hodnotu\n a cas",
+    command=get_and_show_value,
+    width=15,
+    height=3,
+    font=buttonFontMedium,
+)
+button_value.grid(column=0, row=2, padx=10, pady=10)
+
+
+button_close = tk.Button(win, text="Zavriet", command=win.destroy, height=4, width=20)
+button_close.grid(column=1, row=3, padx=10, pady=10)
 
 win.mainloop()

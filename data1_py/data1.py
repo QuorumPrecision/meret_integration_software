@@ -34,15 +34,18 @@ def get_time(ser, addr=255):
     print()
     ser.write(req)
     ret = ser.read(15)
-    for r in ret:
-        print(" " + hex(r), end="")
-    hour = ret[6]
-    minute = ret[7]
-    second = ret[8]
-    day = ret[9]
-    month = ret[10]
-    year = struct.unpack(">H", ret[11:13])[0]
-    out = "{}:{}:{} {}.{}. {}".format(hour, minute, second, day, month, year)
+    try:
+        for r in ret:
+            print(" " + hex(r), end="")
+        hour = ret[6]
+        minute = ret[7]
+        second = ret[8]
+        day = ret[9]
+        month = ret[10]
+        year = struct.unpack(">H", ret[11:13])[0]
+        out = "{}:{}:{} {}.{}. {}".format(hour, minute, second, day, month, year)
+    except Exception as e:
+        raise
     return out
 
 
@@ -150,18 +153,19 @@ def delete_device_archive(ser, addr=255):
 def list_serial_ports():
     SerialsList = []
     for port in serial.tools.list_ports.comports():
-        SerialsList.append(port.device)
-        print(port.vid)
+        #print(port.vid)
         print(port.hwid)
-        print(port.pid)
-        print(port.serial_number)
-        print(port.location)
-        print(port.manufacturer)
-        print(port.product)
-        print(port.interface)
-        print(port.description)
-        print(port.device)
-        print(port.name)
+        #print(port.pid)
+        #print(port.serial_number)
+        #print(port.location)
+        #print(port.manufacturer)
+        #print(port.product)
+        #print(port.interface)
+        #print(port.description)
+        #print(port.device)
+        #print(port.name)
+        if "VID" in port.hwid:
+            SerialsList.append(port.device)
     return SerialsList
 
 
