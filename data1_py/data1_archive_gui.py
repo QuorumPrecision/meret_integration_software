@@ -6,9 +6,13 @@ import sys
 import json
 from pprint import pprint
 import tkinter.font
+import configparser
+from os import path
 
 connect_serial_state = False
 ser = None
+config = configparser.ConfigParser()
+config.read("data1_config.ini")
 
 
 def download_and_save_archive():
@@ -23,7 +27,9 @@ def download_and_save_archive():
         print("Nepodarilo sa stiahnut archiv!")
         disconnect_serial()
         return
-    json_file_name = "archive_data.json"
+    json_file_name = "{}/archive_data.json".format(
+        config["archive"]["archive_save_path"]
+    )
     with open(json_file_name, "w") as outfile:
         json.dump(archive_data, outfile)
     status_text.set("{}".format(json_file_name))
@@ -71,6 +77,16 @@ def disconnect_serial():
     button_disconnect.config(state="disabled")
     button_connect.config(state="normal")
 
+
+archive_path = "{}".format(config["archive"]["archive_save_path"])
+if not path.exists(archive_path):
+    print(
+        "Cesta na ulozenie archivu nie je nastavena, alebo adresar neexistuje: {}".format(
+            archive_path
+        )
+    )
+    sys.exit()
+print("Adresar kam sa bude ukladat archiv: {}".format(archive_path))
 
 SerialsList = data1.list_serial_ports()
 if len(SerialsList) < 1:
