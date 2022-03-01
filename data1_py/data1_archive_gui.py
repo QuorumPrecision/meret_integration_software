@@ -1,3 +1,4 @@
+from email import message
 import tkinter as tk
 from tkinter import messagebox
 import data1
@@ -31,8 +32,16 @@ def download_and_save_archive():
     json_file_name = "{}/archive_data.json".format(
         config["archive"]["archive_save_path"]
     )
-    with open(json_file_name, "w") as outfile:
+    try:
+        outfile = open(json_file_name, "w")
         json.dump(archive_data, outfile)
+        outfile.close()
+    except Exception as e:
+        messagebox.showerror(
+            "Error ukladania suboru",
+            "Nebolo mozne ulozit archivny subor! {}".format(str(e)),
+        )
+        return
     status_text.set("{}".format(json_file_name))
     messagebox.showinfo(
         "Stav stiahnutia",
@@ -85,6 +94,9 @@ if not path.exists(archive_path):
         "Cesta na ulozenie archivu nie je nastavena, alebo adresar neexistuje: {}".format(
             archive_path
         )
+    )
+    messagebox.showerror(
+        "Chyba", "Nenajdena cesta na ulozenie archivu: {}".format(archive_path)
     )
     sys.exit()
 print("Adresar kam sa bude ukladat archiv: {}".format(archive_path))
