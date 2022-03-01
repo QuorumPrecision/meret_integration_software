@@ -23,18 +23,30 @@ def download_and_save_archive():
         archive_data = data1.read_archive(ser)
     except Exception as e:
         print(str(e))
-        messagebox.showerror(
-            "Chyba!", "Nepodarilo sa stiahnut archiv. Mate spravne nastaveny COM port?"
-        )
+        messagebox.showerror("Chyba!", "Nepodarilo sa stiahnut archiv.")
         print("Nepodarilo sa stiahnut archiv!")
         disconnect_serial()
         return
-    json_file_name = "{}/archive_data.json".format(
-        config["archive"]["archive_save_path"]
+    out_file_name = "{}/{}.csv".format(
+        config["archive"]["archive_save_path"], data1.get_device_serial(ser)
     )
     try:
-        outfile = open(json_file_name, "w")
-        json.dump(archive_data, outfile)
+        outfile = open(out_file_name, "w")
+        outfile.write("Dátum;Čas;Hladina\n\n")
+        for r in archive_data:
+            # 01.03.2022;11:20:16;0,73
+            value = pressure = "{:.2f}".format(float(r["value"])).replace(".", ",")
+            outfile.write(
+                "{:02d}.{:02d}.{};{:02d}:{:02d}:{:02d};{}\n".format(
+                    r["time_day"],
+                    r["time_month"],
+                    r["time_year"],
+                    r["time_hour"],
+                    r["time_min"],
+                    r["time_sec"],
+                    value,
+                )
+            )
         outfile.close()
     except Exception as e:
         messagebox.showerror(
@@ -42,10 +54,10 @@ def download_and_save_archive():
             "Nebolo mozne ulozit archivny subor! {}".format(str(e)),
         )
         return
-    status_text.set("{}".format(json_file_name))
+    status_text.set("{}".format(out_file_name))
     messagebox.showinfo(
         "Stav stiahnutia",
-        "Archiv bol stiahnuty a ulozeny do suboru {}!".format(json_file_name),
+        "Archiv bol stiahnuty a ulozeny do suboru {}!".format(out_file_name),
     )
     delete_archive_from_device = messagebox.askquestion(
         "Vymazat data?", "Prajete si vymazat archiv zo zariadenia?"
@@ -109,7 +121,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+100+100")
-win.title("Data1 Archive Reader 2.0.3")
+win.title("Data1 Archive Reader 2.0.4")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")

@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     port = args.port
 
-    ser = data1.connect_serial(port="COM4")
+    ser = data1.connect_serial(port=args.port)
 
     addr = 255
 
@@ -42,6 +42,10 @@ if __name__ == "__main__":
     r['vycitanie_archivu_4'] =          bytearray((0x55, addr, 0x00, 0x0b, 0x1e, 0x23, 0x00, 0xe0, 0x1d, 0x45, 0x1e)) # vsetky odpovede maju jeden posledny byte CRC
     # cislovanie v archivoch - 1_ zacina 0x32, 2 zacina 0x04, 3 zacina 0x12, 4 zacina 0x20 t.j. po precitani 64 zaznamov zacina cislovanie od zaciatku
     # fmt: on
+
+    print(data1.get_device_serial(ser))
+
+    sys.exit()
 
     archive = data1.read_archive(ser)
 

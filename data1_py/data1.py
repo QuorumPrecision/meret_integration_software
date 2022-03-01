@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from tkinter import messagebox
 import serial
 import serial.tools.list_ports
 import struct
@@ -24,6 +25,17 @@ def get_pressure(ser, addr=255):
     ser.write(req)
     ret = ser.read(11)
     value = struct.unpack("f", ret[6:10])[0]
+    return value
+
+
+def get_device_serial(ser, addr=255):
+    # req = bytearray((0x55, addr, 0x00, 0x06, 0x01))
+    req = bytearray((0x55, addr, 0x00, 0x06, 0x02))
+    # req = bytearray((0x55, addr, 0x00, 0x06, 0x03))
+    req = req + checksum(req)
+    ser.write(req)
+    ret = ser.read(50)
+    value = ret[5:13].decode("UTF-8")
     return value
 
 
@@ -210,13 +222,19 @@ def read_archive(ser):
     progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=segments, length=800)
     progress_bar.grid(row=1, column=0)
     popup.pack_slaves()
-    while seg <= segments:
-        print("Reading segment {} / {}".format(seg, segments))
-        archive.extend(read_bytes_from_memory(ser, mem_addr))
-        mem_addr = mem_addr + 140
-        seg = seg + 1
-        popup.update()
-        progress_var.set(seg)
+    try:
+        while seg <= segments:
+            print("Reading segment {} / {}".format(seg, segments))
+            info = read_bytes_from_memory(ser, mem_addr)
+            archive.extend(info)
+            mem_addr = mem_addr + 140
+            seg = seg + 1
+            popup.update()
+            progress_var.set(seg)
+    except Exception as e:
+        print("Error raised: " + str(e))
+        popup.destroy
+        raise
     popup.destroy
     return archive
 
@@ -228,10 +246,23 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
     req = bytearray((0x55, device_addr, 0x00, 0x0B, 0x1E, 0x23)) + bytearray(
         mem_addr_bytes
     )
-    # req = req + bytearray((0x78,)) # 00 a0 03 45 = 2106
     req = req + checksum(req)
     ser.write(req)
     ret = ser.read(147)
+    
+    print("RX packet: ")
+    for by in ret:
+        print("{:02X} ".format(by), end="")
+    print()
+    rx_chksum = checksum(ret[:-1])[0]
+    print("Checksum from packet: {:02X}".format(ret[-1]))
+    print("Calculated checksum:  {:02X}".format(rx_chksum))
+    
+    if ret[-1] != rx_chksum:
+        messagebox.showerror("Error", "Problem stahovania dat z archivu - nesedi checksum! Skuste stiahnut archiv opat.")
+        print("Calculated checksum: {}".format(rx_chksum))
+        raise Exception("Checksum is not correct!")
+    
     i = 12  # records starting on 12th byte of response
 
     while i < 140:
