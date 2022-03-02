@@ -48,15 +48,25 @@ def get_time():
 
 def set_cadence():
     global ser
+    try:
+        hours = int(cadence_label.get().split(':')[0])
+        minutes = int(cadence_label.get().split(':')[1])
+        seconds = int(cadence_label.get().split(':')[2])
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+        raise
+    if (hours > 23 or minutes > 59 or seconds > 29):
+        messagebox.showerror("Error", "Nastavenie casu ma hodnoty mimo povoleneho rozsahu")
+        raise
     sync_time()  # this resets archive interval - must be first!
-    seconds = int(cadence_label.get())
-    data1.set_archive_interval(ser, seconds=seconds)
+    data1.set_archive_interval(ser, hours=hours, minutes=minutes, seconds=seconds)
     get_cadence()
 
 
 def get_cadence():
     global ser
-    cadence = str(data1.get_archive_interval(ser))
+    cad = data1.get_archive_interval(ser)
+    cadence = "{}:{}:{}".format(cad['hrs'], cad['mins'], cad['secs'])
     device_cadence_text.set(cadence)
 
 
@@ -83,8 +93,8 @@ if len(SerialsList) < 1:
 
 
 win = tk.Tk()
-win.geometry("+100+100")
-win.title("Data1 Configurator 2.0.0")
+win.geometry("+2+2")
+win.title("Data1 Configurator 2.0.1")
 
 frame_connection = tk.LabelFrame(win, text="Pripojenie")
 frame_connection.grid(column=0, row=0, padx=10, pady=10, sticky="N")
@@ -152,7 +162,7 @@ cadence_get.grid(column=0, row=4, padx=10, pady=10, sticky="W")
 cadence_label = tk.Entry(frame_data, width=30)
 cadence_label.grid(column=0, row=5, padx=10, pady=10)
 cadence_set = tk.Button(
-    frame_data, text="Nastavit periodu merania", command=set_cadence
+    frame_data, text="Nastavit periodu merania\nFormat: H:M:S", command=set_cadence
 )
 cadence_set.grid(column=1, row=5, padx=10, pady=10, sticky="W")
 
