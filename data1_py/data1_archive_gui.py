@@ -1,19 +1,12 @@
-from email import message
 import tkinter as tk
 from tkinter import messagebox
-import data1
-import serial
+from tkinter.filedialog import asksaveasfile
 import sys
-import json
-from pprint import pprint
 import tkinter.font
-import configparser
-from os import path
+import data1
 
 connect_serial_state = False
 ser = None
-config = configparser.ConfigParser()
-config.read("data1_config.ini")
 
 
 def download_and_save_archive():
@@ -27,11 +20,22 @@ def download_and_save_archive():
         print("Nepodarilo sa stiahnut archiv!")
         disconnect_serial()
         return
-    out_file_name = "{}/{}.csv".format(
-        config["archive"]["archive_save_path"], data1.get_device_serial(ser)
-    )
     try:
-        outfile = open(out_file_name, "w")
+        serial_number = data1.get_device_serial(ser)
+        outfile = asksaveasfile(
+            filetypes=[
+                ("CSV subor", ".csv"),
+            ],
+            mode="w",
+            defaultextension=[
+                ("CSV subor", ".csv"),
+            ],
+            initialfile="{}.csv".format(serial_number),
+        )
+        if (
+            outfile is None
+        ):  # asksaveasfile return `None` if dialog closed with "cancel".
+            raise Exception("File not selected")
         outfile.write("Dátum;Čas;Hladina\n\n")
         for r in archive_data:
             # 01.03.2022;11:20:16;0,73
@@ -54,11 +58,7 @@ def download_and_save_archive():
             "Nebolo mozne ulozit archivny subor! {}".format(str(e)),
         )
         return
-    status_text.set("{}".format(out_file_name))
-    messagebox.showinfo(
-        "Stav stiahnutia",
-        "Archiv bol stiahnuty a ulozeny do suboru {}!".format(out_file_name),
-    )
+    messagebox.showinfo("Stav stiahnutia", "Archiv bol stiahnuty a ulozeny do suboru!")
     delete_archive_from_device = messagebox.askquestion(
         "Vymazat data?", "Prajete si vymazat archiv zo zariadenia?"
     )
@@ -88,6 +88,7 @@ def connect_serial():
     button_archive.config(state="normal")
     button_connect.config(state="disabled")
     button_disconnect.config(state="normal")
+    button_value.config(state="normal")
 
 
 def disconnect_serial():
@@ -98,20 +99,8 @@ def disconnect_serial():
     button_archive.config(state="disable")
     button_disconnect.config(state="disabled")
     button_connect.config(state="normal")
+    button_value.config(state="disable")
 
-
-archive_path = "{}".format(config["archive"]["archive_save_path"])
-if not path.exists(archive_path):
-    print(
-        "Cesta na ulozenie archivu nie je nastavena, alebo adresar neexistuje: {}".format(
-            archive_path
-        )
-    )
-    messagebox.showerror(
-        "Chyba", "Nenajdena cesta na ulozenie archivu: {}".format(archive_path)
-    )
-    sys.exit()
-print("Adresar kam sa bude ukladat archiv: {}".format(archive_path))
 
 SerialsList = data1.list_serial_ports()
 if len(SerialsList) < 1:
@@ -121,7 +110,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+100+100")
-win.title("Data1 Archive Reader 2.0.4")
+win.title("Data1 Archive Reader 2.1.0")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
@@ -205,6 +194,7 @@ button_value = tk.Button(
     font=buttonFontMedium,
 )
 button_value.grid(column=0, row=2, padx=10, pady=10)
+button_value.config(state="disable")
 
 
 button_close = tk.Button(win, text="Zavriet", command=win.destroy, height=4, width=20)
