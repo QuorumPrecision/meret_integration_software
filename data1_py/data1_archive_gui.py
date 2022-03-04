@@ -104,7 +104,7 @@ def disconnect_serial():
 
 SerialsList = data1.list_serial_ports()
 if len(SerialsList) < 1:
-    messagebox.showerror("Chyba", "Ani jeden seriovy port nenajdeny")
+    messagebox.showerror("Chyba", "Ani jeden seriovy port nebol najdeny")
     sys.exit()
 
 

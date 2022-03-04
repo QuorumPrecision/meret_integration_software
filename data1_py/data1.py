@@ -233,9 +233,9 @@ def read_archive(ser):
             progress_var.set(seg)
     except Exception as e:
         print("Error raised: " + str(e))
-        popup.destroy
+        popup.destroy()
         raise
-    popup.destroy
+    popup.destroy()
     return archive
 
 
