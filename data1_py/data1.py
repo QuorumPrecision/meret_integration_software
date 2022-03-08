@@ -10,6 +10,7 @@ import datetime
 import tkinter as tk
 from tkinter import ttk
 
+
 def checksum(by):
     sum = 0
     for b in by:
@@ -166,17 +167,17 @@ def delete_device_archive(ser, addr=255):
 def list_serial_ports():
     SerialsList = []
     for port in serial.tools.list_ports.comports():
-        #print(port.vid)
+        # print(port.vid)
         print(port.hwid)
-        #print(port.pid)
-        #print(port.serial_number)
-        #print(port.location)
-        #print(port.manufacturer)
-        #print(port.product)
-        #print(port.interface)
-        #print(port.description)
-        #print(port.device)
-        #print(port.name)
+        # print(port.pid)
+        # print(port.serial_number)
+        # print(port.location)
+        # print(port.manufacturer)
+        # print(port.product)
+        # print(port.interface)
+        # print(port.description)
+        # print(port.device)
+        # print(port.name)
         if "VID" in port.hwid:
             SerialsList.append(port.device)
     return SerialsList
@@ -184,7 +185,9 @@ def list_serial_ports():
 
 def connect_serial(port="COM4"):
     print("Connecting to serial port {}".format(port))
-    ser = serial.Serial(port=port, baudrate=9600, parity=serial.PARITY_NONE, timeout=1, write_timeout=5)
+    ser = serial.Serial(
+        port=port, baudrate=9600, parity=serial.PARITY_NONE, timeout=1, write_timeout=5
+    )
     return ser
 
 
@@ -213,17 +216,19 @@ def read_archive(ser):
     except Exception as e:
         raise
     segments = int(math.ceil(samples_available / 14.0))
-    print("Available records: {} Segments: {}".format(samples_available, segments))
+    print("Available records: {} Segments (14 records per segment): {}".format(samples_available, segments))
     mem_addr = 0
     seg = 0
     popup = tk.Toplevel()
     popup.title("Stahujem archiv...")
     progress_var = tk.DoubleVar()
-    progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=segments, length=800)
+    progress_bar = ttk.Progressbar(
+        popup, variable=progress_var, maximum=segments, length=800
+    )
     progress_bar.grid(row=1, column=0)
     popup.pack_slaves()
     try:
-        while seg <= segments:
+        while seg < segments + 1:
             print("Reading segment {} / {}".format(seg, segments))
             info = read_bytes_from_memory(ser, mem_addr)
             archive.extend(info)
@@ -249,7 +254,7 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
     req = req + checksum(req)
     ser.write(req)
     ret = ser.read(147)
-    
+
     print("RX packet: ")
     for by in ret:
         print("{:02X} ".format(by), end="")
@@ -257,12 +262,15 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
     rx_chksum = checksum(ret[:-1])[0]
     print("Checksum from packet: {:02X}".format(ret[-1]))
     print("Calculated checksum:  {:02X}".format(rx_chksum))
-    
+
     if ret[-1] != rx_chksum:
-        messagebox.showerror("Error", "Problem stahovania dat z archivu - nesedi checksum! Skuste stiahnut archiv opat.")
+        messagebox.showerror(
+            "Error",
+            "Problem stahovania dat z archivu - nesedi checksum! Skuste stiahnut archiv opat.",
+        )
         print("Calculated checksum: {}".format(rx_chksum))
         raise Exception("Checksum is not correct!")
-    
+
     i = 12  # records starting on 12th byte of response
 
     while i < 140:
@@ -272,8 +280,8 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
         archive.append(
             {
                 "time_sec": record[0],
-                "time_min": record[1] >> 3,
-                "time_hour": (record[1] & 0x03) << 3 | record[2] >> 5,
+                "time_hour": record[1] >> 3,
+                "time_min": (record[1] & 0x07) << 3 | record[2] >> 5,
                 "time_day": record[2] & 0x1F,
                 "time_month": record[3] >> 3,
                 "time_dow": record[3] & 0x07,

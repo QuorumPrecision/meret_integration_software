@@ -49,14 +49,16 @@ def get_time():
 def set_cadence():
     global ser
     try:
-        hours = int(cadence_label.get().split(':')[0])
-        minutes = int(cadence_label.get().split(':')[1])
-        seconds = int(cadence_label.get().split(':')[2])
+        hours = int(cadence_label.get().split(":")[0])
+        minutes = int(cadence_label.get().split(":")[1])
+        seconds = int(cadence_label.get().split(":")[2])
     except Exception as e:
         messagebox.showerror("Error", str(e))
         raise
-    if (hours > 23 or minutes > 59 or seconds > 29):
-        messagebox.showerror("Error", "Nastavenie casu ma hodnoty mimo povoleneho rozsahu")
+    if hours > 23 or minutes > 59 or seconds > 29:
+        messagebox.showerror(
+            "Error", "Nastavenie casu ma hodnoty mimo povoleneho rozsahu"
+        )
         raise
     sync_time()  # this resets archive interval - must be first!
     data1.set_archive_interval(ser, hours=hours, minutes=minutes, seconds=seconds)
@@ -66,7 +68,7 @@ def set_cadence():
 def get_cadence():
     global ser
     cad = data1.get_archive_interval(ser)
-    cadence = "{}:{}:{}".format(cad['hrs'], cad['mins'], cad['secs'])
+    cadence = "{}:{}:{}".format(cad["hrs"], cad["mins"], cad["secs"])
     device_cadence_text.set(cadence)
 
 

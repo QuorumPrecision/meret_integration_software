@@ -40,17 +40,17 @@ def download_and_save_archive():
         for r in archive_data:
             # 01.03.2022;11:20:16;0,73
             value = pressure = "{:.2f}".format(float(r["value"])).replace(".", ",")
-            outfile.write(
-                "{:02d}.{:02d}.{};{:02d}:{:02d}:{:02d};{}\n".format(
-                    r["time_day"],
-                    r["time_month"],
-                    r["time_year"],
-                    r["time_hour"],
-                    r["time_min"],
-                    r["time_sec"],
-                    value,
-                )
+            record_line = "{:02d}.{:02d}.{};{:02d}:{:02d}:{:02d};{}\n".format(
+                r["time_day"],
+                r["time_month"],
+                r["time_year"],
+                r["time_hour"],
+                r["time_min"],
+                r["time_sec"],
+                value,
             )
+            print(record_line, end="")
+            outfile.write(record_line)
         outfile.close()
     except Exception as e:
         messagebox.showerror(
