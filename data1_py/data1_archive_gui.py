@@ -111,7 +111,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Archive Reader 2.1.1")
+win.title("Data1 Archive Reader 2.1.2")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")

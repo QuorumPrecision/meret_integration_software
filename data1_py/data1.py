@@ -228,7 +228,7 @@ def read_archive(ser):
     progress_bar.grid(row=1, column=0)
     popup.pack_slaves()
     try:
-        while seg < segments + 1:
+        while seg < segments:
             print("Reading segment {} / {}".format(seg, segments))
             info = read_bytes_from_memory(ser, mem_addr)
             archive.extend(info)
@@ -281,7 +281,7 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
             {
                 "time_sec": record[0],
                 "time_hour": record[1] >> 3,
-                "time_min": (record[1] & 0x07) << 3 | record[2] >> 5,
+                "time_min": ((record[1] & 0x07) << 3) | (record[2] >> 5),
                 "time_day": record[2] & 0x1F,
                 "time_month": record[3] >> 3,
                 "time_dow": record[3] & 0x07,
