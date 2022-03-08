@@ -36,7 +36,7 @@ def download_and_save_archive():
             outfile is None
         ):  # asksaveasfile return `None` if dialog closed with "cancel".
             raise Exception("File not selected")
-        outfile.write("Dátum;Čas;Hladina\n\n")
+        outfile.write("Datum;Cas;Hladina\n\n")
         for r in archive_data:
             # 01.03.2022;11:20:16;0,73
             value = pressure = "{:.2f}".format(float(r["value"])).replace(".", ",")
@@ -67,6 +67,7 @@ def download_and_save_archive():
         data1.delete_device_archive(ser)
     else:
         print("Data zostavaju v zariadeni")
+    status_text.set("Data stiahnute")
 
 
 def get_and_show_value():
@@ -123,6 +124,7 @@ frame_archive = tk.LabelFrame(win, text="Archiv")
 frame_archive.grid(column=1, row=0, padx=10, pady=10, sticky="N")
 
 serial_selected = tk.StringVar(frame_connection)
+serial_selected.set("Vyberte pripojenie")
 serials_dropdown = tk.OptionMenu(frame_connection, serial_selected, *SerialsList)
 serials_dropdown.config(font=buttonFontMedium)
 serials_dropdown.config(width=30)
