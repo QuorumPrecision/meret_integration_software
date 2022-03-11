@@ -23,6 +23,7 @@ def checksum(by):
 
 def get_pressure(ser, addr=255):
     req = bytearray((0x55, addr, 0x00, 0x08, 0x05, 0x10, 0x00, 0x8F))
+    ser.read(1000)
     ser.write(req)
     ret = ser.read(11)
     value = struct.unpack("f", ret[6:10])[0]
@@ -46,6 +47,7 @@ def get_time(ser, addr=255):
     for r in req:
         print(" " + hex(r), end="")
     print()
+    ser.read(1000)
     ser.write(req)
     ret = ser.read(15)
     try:
@@ -186,7 +188,11 @@ def list_serial_ports():
 def connect_serial(port="COM4"):
     print("Connecting to serial port {}".format(port))
     ser = serial.Serial(
-        port=port, baudrate=9600, parity=serial.PARITY_NONE, timeout=1, write_timeout=5
+        port=port,
+        baudrate=9600,
+        parity=serial.PARITY_NONE,
+        timeout=0.75,
+        write_timeout=5,
     )
     return ser
 
@@ -196,6 +202,7 @@ def get_samples_count(ser, device_addr=255):
     req = bytearray((0x55, device_addr, 0x00, 0x07, 0x1E, 0x22))
     req = req + checksum(req)
     pprint(req)
+    ser.read(9999)  # clear serial buffer
     try:
         ser.write(req)
     except Exception as e:
@@ -203,9 +210,8 @@ def get_samples_count(ser, device_addr=255):
         raise
     print("get_samples_count: Waiting for response from device")
     ret = ser.read(11)
-    print("Returned")
     samples = struct.unpack("f", ret[6:10])[0]
-    print(samples)
+    print("Returned: {}".format(samples))
     return samples
 
 
@@ -216,9 +222,12 @@ def read_archive(ser):
     except Exception as e:
         raise
     segments = int(math.ceil(samples_available / 14.0))
-    print("Available records: {} Segments (14 records per segment): {}".format(samples_available, segments))
-    mem_addr = 0
-    seg = 0
+    print(
+        "Available records: {} Segments (14 records per segment): {}".format(
+            samples_available, segments
+        )
+    )
+    mem_addr = 6
     popup = tk.Toplevel()
     popup.title("Stahujem archiv...")
     progress_var = tk.DoubleVar()
@@ -227,9 +236,12 @@ def read_archive(ser):
     )
     progress_bar.grid(row=1, column=0)
     popup.pack_slaves()
+    seg = 0
     try:
         while seg < segments:
-            print("Reading segment {} / {}".format(seg, segments))
+            print(
+                "Reading segment {} / {} (mem_addr: {})".format(seg, segments, mem_addr)
+            )
             info = read_bytes_from_memory(ser, mem_addr)
             archive.extend(info)
             mem_addr = mem_addr + 140
@@ -252,8 +264,10 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
         mem_addr_bytes
     )
     req = req + checksum(req)
+    if ser.in_waiting:
+        ser.read(9999)
     ser.write(req)
-    ret = ser.read(147)
+    ret = ser.read(147)  # 147
 
     print("RX packet: ")
     for by in ret:
@@ -271,9 +285,9 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
         print("Calculated checksum: {}".format(rx_chksum))
         raise Exception("Checksum is not correct!")
 
-    i = 12  # records starting on 12th byte of response
+    i = 6  # records starting on 6th byte of response
 
-    while i < 140:
+    while i <= 140:
         records.append(ret[i : i + 10])
         i = i + 10
     for record in records:

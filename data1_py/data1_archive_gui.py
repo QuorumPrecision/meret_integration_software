@@ -36,6 +36,8 @@ def download_and_save_archive():
             outfile is None
         ):  # asksaveasfile return `None` if dialog closed with "cancel".
             raise Exception("File not selected")
+        samples_available = data1.get_samples_count(ser)
+        samples_saved = 1
         outfile.write("Datum;Cas;Hladina\n\n")
         for r in archive_data:
             # 01.03.2022;11:20:16;0,73
@@ -49,8 +51,11 @@ def download_and_save_archive():
                 r["time_sec"],
                 value,
             )
-            print(record_line, end="")
+            print(samples_saved, record_line, end="")
             outfile.write(record_line)
+            samples_saved = samples_saved + 1
+            if samples_saved >= samples_available:
+                break
         outfile.close()
     except Exception as e:
         messagebox.showerror(
@@ -111,7 +116,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Archive Reader 2.1.2")
+win.title("Data1 Archive Reader 2.2.1")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
