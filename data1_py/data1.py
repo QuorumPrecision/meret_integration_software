@@ -212,15 +212,13 @@ def get_samples_count(ser, device_addr=255):
     ret = ser.read(11)
     samples = struct.unpack("f", ret[6:10])[0]
     print("Returned: {}".format(samples))
+    if samples <= 0:
+        raise Exception("Archiv v zarideni je prazdny!")
     return samples
 
 
-def read_archive(ser):
+def read_archive(ser, samples_available):
     archive = []
-    try:
-        samples_available = get_samples_count(ser)
-    except Exception as e:
-        raise
     segments = int(math.ceil(samples_available / 14.0))
     print(
         "Available records: {} Segments (14 records per segment): {}".format(

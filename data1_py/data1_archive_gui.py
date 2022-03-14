@@ -13,7 +13,12 @@ def download_and_save_archive():
     global ser
     status_text.set("Stahujem data zo zariadenia...")
     try:
-        archive_data = data1.read_archive(ser)
+        samples_available = data1.get_samples_count(ser)
+    except Exception as e:
+        messagebox.showerror("Chyba!", str(e))
+        raise
+    try:
+        archive_data = data1.read_archive(ser, samples_available)
     except Exception as e:
         print(str(e))
         messagebox.showerror("Chyba!", "Nepodarilo sa stiahnut archiv.")
@@ -43,7 +48,6 @@ def download_and_save_archive():
         )
         return
     try:
-        samples_available = data1.get_samples_count(ser)
         samples_saved = 1
         outfile.write("Datum;Cas;Hladina\n\n")
         for r in archive_data:
@@ -123,7 +127,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Archive Reader 2.2.2")
+win.title("Data1 Archive Reader 2.2.3")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
