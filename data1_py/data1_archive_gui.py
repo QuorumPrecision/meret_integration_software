@@ -36,6 +36,13 @@ def download_and_save_archive():
             outfile is None
         ):  # asksaveasfile return `None` if dialog closed with "cancel".
             raise Exception("File not selected")
+    except Exception as e:
+        messagebox.showerror(
+            "Error ukladania suboru",
+            "Nebolo mozne otvorit subor pre zapisovanie! {}".format(str(e)),
+        )
+        return
+    try:
         samples_available = data1.get_samples_count(ser)
         samples_saved = 1
         outfile.write("Datum;Cas;Hladina\n\n")
@@ -116,7 +123,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Archive Reader 2.2.1")
+win.title("Data1 Archive Reader 2.2.2")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
