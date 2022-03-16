@@ -180,8 +180,8 @@ def list_serial_ports():
         # print(port.description)
         # print(port.device)
         # print(port.name)
-        if "VID" in port.hwid:
-            SerialsList.append(port.device)
+        #if "VID" in port.hwid:
+        SerialsList.append(port.device)
     return SerialsList
 
 
