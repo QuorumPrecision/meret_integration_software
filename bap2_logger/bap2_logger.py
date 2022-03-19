@@ -92,7 +92,6 @@ if __name__ == "__main__":
     ser = serial.Serial(
         port=port, baudrate=serial_baud, parity=serial.PARITY_EVEN, timeout=uart_timeout
     )
-    modbus_id = 1
 
     file_name = "{}.csv".format(int(time.time()))
     print("Saving to file: {}".format(file_name))
