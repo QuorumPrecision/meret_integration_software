@@ -4,6 +4,7 @@ from tkinter.filedialog import asksaveasfile
 import sys
 import tkinter.font
 import data1
+from tkinter import ttk
 
 connect_serial_state = False
 ser = None
@@ -127,7 +128,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Archive Reader 2.2.4")
+win.title("Data1 Archive Reader 2.2.5")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
@@ -139,13 +140,20 @@ frame_connection.grid(column=0, row=0, padx=10, pady=10, sticky="N")
 frame_archive = tk.LabelFrame(win, text="Archiv")
 frame_archive.grid(column=1, row=0, padx=10, pady=10, sticky="N")
 
+serials_dropdown_style = ttk.Style(frame_connection)
+serials_dropdown_style.theme_use("classic")
+serials_dropdown_style.configure("TCombobox", arrowsize=60)
+serials_dropdown_style.configure(
+    "Vertical.TScrollbar", arrowsize=100, background="red", font=buttonFontMedium
+)
+win.option_add("*Listbox*Font", buttonFontMedium)
+
 serial_selected = tk.StringVar(frame_connection)
 serial_selected.set("Vyberte pripojenie")
-serials_dropdown = tk.OptionMenu(frame_connection, serial_selected, *SerialsList)
+serials_dropdown = ttk.Combobox(
+    frame_connection, textvariable=serial_selected, values=SerialsList
+)
 serials_dropdown.config(font=buttonFontMedium)
-serials_dropdown.config(width=30)
-menu = win.nametowidget(serials_dropdown.menuname)
-menu.config(font=buttonFontMedium)
 serials_dropdown.grid(column=0, row=0, padx=10, pady=10, sticky="W", columnspan=2)
 
 button_connect = tk.Button(
