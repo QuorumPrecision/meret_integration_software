@@ -68,29 +68,34 @@ def modbus_get_uint16(ser, funct, modbus_id, start_byte):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--port", help="Serial port", required=True)
+    parser.add_argument("--baudrate", help="Serial baudrate", default=9600)
+    parser.add_argument("--parity", help="EVEN or NONE", default="NONE")
     parser.add_argument("--modbus_id", help="MODBUS ID", default=1)
     parser.add_argument(
         "--cadence",
         help="How many seconds apart to request measurement",
-        type=int,
-        choices=range(1, 60),
+        type=float,
         default=1,
     )
     args = parser.parse_args()
 
     port = args.port
     modbus_id = args.modbus_id
-    serial_baud = 115200
+    serial_baud = int(args.baudrate)
+    if args.parity == "EVEN":
+        parity = serial.PARITY_EVEN
+    else:
+        parity = serial.PARITY_NONE
 
-    print("Software support: info@moirelabs.com  Version: 1.2  Author: MH")
+    print("Software support: info@moirelabs.com  Version: 1.3  Author: MH")
     print(
-        "Connecting using serial port {}, parity: EVEN, baud: {}, cadence of measurement: {}s".format(
-            port, serial_baud, args.cadence
+        "Connecting using serial port {}, parity: {}, baud: {}, cadence of measurement: {}s".format(
+            port, parity, serial_baud, args.cadence
         )
     )
-    uart_timeout = 0.9
+    uart_timeout = 0.2
     ser = serial.Serial(
-        port=port, baudrate=serial_baud, parity=serial.PARITY_EVEN, timeout=uart_timeout
+        port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout
     )
 
     file_name = "{}.csv".format(int(time.time()))
@@ -98,10 +103,12 @@ if __name__ == "__main__":
     f = open(file_name, "w", encoding="utf-8")
 
     primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562)
-    primary_multiple = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
+    primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
 
-    if primary_unit == 5 and primary_multiple == 11:
+    if primary_unit == 5 and primary_multiplier == 11:
         unit = "kPa"
+    elif primary_unit == 1 and primary_multiplier == 0:
+        unit = "C"
     else:
         unit = "unknown unit"
 
