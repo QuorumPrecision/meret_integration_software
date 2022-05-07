@@ -32,7 +32,7 @@ def modbus_get_bytes(ser, funct, modbus_id, start_byte, count):
     req = calc_crc(req)
     # print("TX: " + req.hex())
     ser.write(req)
-    ret = ser.read(20)
+    ret = ser.read(count * 2 + 5)
     # print("RX: " + ret.hex())
     return ret[3:][:-2]
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
             port, parity, serial_baud, args.cadence
         )
     )
-    uart_timeout = 0.2
+    uart_timeout = 0.5
     ser = serial.Serial(
         port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout
     )
@@ -121,4 +121,4 @@ if __name__ == "__main__":
         f.write(data)
         f.flush()
         print(data, end="")
-        time.sleep(args.cadence - uart_timeout)
+        time.sleep(args.cadence)
