@@ -102,8 +102,13 @@ if __name__ == "__main__":
     print("Saving to file: {}".format(file_name))
     f = open(file_name, "w", encoding="utf-8")
 
-    primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562)
-    primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
+    primary_unit = 255
+    primary_multiplier = 255
+    try:
+        primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562)
+        primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
+    except Exception as e:
+        print("Unable to detect measurement unit")
 
     if primary_unit == 5 and primary_multiplier == 11:
         unit = "kPa"
