@@ -70,10 +70,10 @@ if __name__ == "__main__":
     parser.add_argument("--port", help="Serial port", required=True)
     parser.add_argument("--baudrate", help="Serial baudrate", default=9600)
     parser.add_argument("--parity", help="EVEN or NONE", default="NONE")
-    parser.add_argument("--modbus_id", help="MODBUS ID", default=1)
+    parser.add_argument("--modbus_id", help="MODBUS ID", default=1, type=int)
     parser.add_argument(
-        "--cadence",
-        help="How many seconds apart to request measurement",
+        "--cadence_ms",
+        help="How many milliseconds apart to request measurement",
         type=float,
         default=1,
     )
@@ -87,13 +87,13 @@ if __name__ == "__main__":
     else:
         parity = serial.PARITY_NONE
 
-    print("Software support: info@moirelabs.com  Version: 1.3  Author: MH")
+    print("Software support: info@moirelabs.com  Version: 1.4  Author: MH")
     print(
-        "Connecting using serial port {}, parity: {}, baud: {}, cadence of measurement: {}s".format(
-            port, parity, serial_baud, args.cadence
+        "Connecting using serial port {}, parity: {}, baud: {}, cadence of measurement (ms): {}".format(
+            port, parity, serial_baud, args.cadence_ms
         )
     )
-    uart_timeout = 0.5
+    uart_timeout = 0.095
     ser = serial.Serial(
         port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout
     )
@@ -109,16 +109,27 @@ if __name__ == "__main__":
         unit = "kPa"
     elif primary_unit == 1 and primary_multiplier == 0:
         unit = "C"
+    elif primary_unit == 1 and primary_multiplier == 1:
+        unit = "atto C"
     else:
-        unit = "unknown unit"
+        unit = f"unknown unit ({primary_unit} / {primary_multiplier})"
+
+    sleep_for = (args.cadence_ms / 1000) - uart_timeout
+    print(f"Requested cadency:         {args.cadence_ms:.3f}s")
+    print(f"Device to respond timeout: {uart_timeout:.3f}s")
+    print(f"Sleeping between requests: {sleep_for:.3f}s")
 
     while True:
         i = {}
-        i["primary_value"] = round(modbus_get_float(ser, 0x03, modbus_id, 0x09), 3)
+        try:
+            i["primary_value"] = round(modbus_get_float(ser, 0x03, modbus_id, 0x09), 3)
+        except Exception as e:
+            print("Unable to read data from sensor!")
+            continue
         data = "{},{},{},{}\n".format(
             datetime.now().isoformat(), time.time(), i["primary_value"], unit
         )
         f.write(data)
         f.flush()
         print(data, end="")
-        time.sleep(args.cadence)
+        time.sleep(sleep_for)
