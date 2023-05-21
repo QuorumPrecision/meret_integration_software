@@ -3,14 +3,15 @@
 # tento script je na testovanie meret senzorov pripojenych napriamo k pc napr cez usb prevodnik na rs485 senzora
 # takto je potrebne vygenerovat exe: pyinstaller.exe --onefile .\meret_rs485_sensor_uart_test.py
 
-import tkinter as tk
 import argparse
-import serial
-import serial.tools.list_ports
 import struct
 import sys
+import tkinter as tk
 from pprint import pprint
 from tkinter import messagebox
+
+import serial
+import serial.tools.list_ports
 
 
 def calc_crc(data):
@@ -27,13 +28,9 @@ def calc_crc(data):
 
 
 def modbus_get_bytes(ser, funct, modbus_id, start_byte, count):
-    if funct == 0x44 or funct == 0x46:
+    if funct in (0x44, 0x46):
         count = int(count * 2)
-    req = (
-        bytearray((modbus_id, funct))
-        + start_byte.to_bytes(2, byteorder="big")
-        + count.to_bytes(2, byteorder="big")
-    )
+    req = bytearray((modbus_id, funct)) + start_byte.to_bytes(2, byteorder="big") + count.to_bytes(2, byteorder="big")
     req = calc_crc(req)
     while ser.in_waiting:
         ser.read(1)
@@ -76,9 +73,9 @@ def modbus_get_uint16(ser, funct, modbus_id, start_byte):
 
 def run_tests():
     baudrate = 9600
-    print("Connecting using port {}".format(serial_selected.get()))
-    print("Baud: {}".format(baudrate))
-    print("Using MODBUS ID {}".format(modbus_id))
+    print(f"Connecting using port {serial_selected.get()}")
+    print(f"Baud: {baudrate}")
+    print(f"Using MODBUS ID {modbus_id}")
     i = {}
     try:
         ser = serial.Serial(port=serial_selected.get(), baudrate=baudrate, timeout=0.3)
@@ -95,7 +92,7 @@ def run_tests():
         print(i["primary_reading"])
         pprint(i)
     except Exception as e:
-        err_message = "Sensor MODBUS ID {} not responding!\n{}".format(modbus_id, e)
+        err_message = f"Sensor MODBUS ID {modbus_id} not responding!\n{e}"
         print(err_message)
         messagebox.showerror("Chyba!", err_message)
         ser.close()
@@ -129,9 +126,7 @@ if len(SerialsList) < 1:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Test Meret sensor connected using UART"
-    )
+    parser = argparse.ArgumentParser(description="Test Meret sensor connected using UART")
     parser.add_argument(
         "--verbose",
         action="store_true",
@@ -149,9 +144,7 @@ if __name__ == "__main__":
     serials_dropdown.config(width=30)
     serials_dropdown.grid(column=0, row=0, padx=10, pady=10, sticky="W", columnspan=2)
 
-    button_start_test = tk.Button(
-        win, text="Spusti test", command=run_tests, width=15, height=7
-    )
+    button_start_test = tk.Button(win, text="Spusti test", command=run_tests, width=15, height=7)
     button_start_test.grid(column=0, row=1, padx=10, pady=10, sticky="W")
 
 win.mainloop()

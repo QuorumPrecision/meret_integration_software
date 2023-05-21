@@ -1,10 +1,13 @@
-from email.policy import default
+import sys
 import tkinter as tk
-from turtle import width
+from email.policy import default
 from tkinter import messagebox
+
 import data1
 import serial
-import sys
+
+# from turtle import width
+
 
 connect_serial_state = False
 ser = None
@@ -12,7 +15,7 @@ ser = None
 
 def connect_serial():
     global ser
-    print("Connecting to selected serial port {}".format(serial_selected.get()))
+    print(f"Connecting to selected serial port {serial_selected.get()}")
     ser = data1.connect_serial(port=serial_selected.get())
     global connect_serial_state
     connect_serial_state = True
@@ -56,10 +59,8 @@ def set_cadence():
         messagebox.showerror("Error", str(e))
         raise
     if hours > 23 or minutes > 59 or seconds > 29:
-        messagebox.showerror(
-            "Error", "Nastavenie casu ma hodnoty mimo povoleneho rozsahu"
-        )
-        raise
+        messagebox.showerror("Error", "Nastavenie casu ma hodnoty mimo povoleneho rozsahu")
+        raise Exception
     sync_time()  # this resets archive interval - must be first!
     data1.set_archive_interval(ser, hours=hours, minutes=minutes, seconds=seconds)
     get_cadence()
@@ -79,11 +80,11 @@ def delete_archive():
 def update_current_pressure_value():
     global ser
     global connect_serial_state
-    print("Serial connected: {}".format(connect_serial_state))
+    print(f"Serial connected: {connect_serial_state}")
     if connect_serial_state:
         global current_pressure_value
         current_pressure_value = round(data1.get_pressure(ser), 5)
-        current_pressure_text.set("{}".format(current_pressure_value))
+        current_pressure_text.set(f"{current_pressure_value}")
     else:
         current_pressure_text.set("nepripojeny")
 
@@ -112,9 +113,7 @@ serials_dropdown.grid(column=0, row=0, padx=10, pady=10, sticky="W", columnspan=
 button_connect = tk.Button(frame_connection, text="Pripojit", command=connect_serial)
 button_connect.grid(column=0, row=1, padx=10, pady=10, sticky="W")
 
-button_disconnect = tk.Button(
-    frame_connection, text="Odpojit", command=disconnect_serial
-)
+button_disconnect = tk.Button(frame_connection, text="Odpojit", command=disconnect_serial)
 button_disconnect.grid(column=1, row=1, padx=10, pady=10, sticky="W")
 
 button_close = tk.Button(win, text="Zavriet", command=win.destroy)
@@ -123,39 +122,27 @@ button_close.grid(column=0, row=1, padx=10, pady=10)
 current_pressure_value = 0.0
 current_pressure_text = tk.StringVar(frame_data)
 current_pressure_text.set("Cakam na pripojenie...")
-current_pressure_label = tk.Entry(
-    frame_data, textvariable=current_pressure_text, state="disable", width=30
-)
+current_pressure_label = tk.Entry(frame_data, textvariable=current_pressure_text, state="disable", width=30)
 current_pressure_label.grid(column=1, row=0, padx=10, pady=10)
 
-button_value = tk.Button(
-    frame_data, text="Nacitat aktualnu hodnotu", command=update_current_pressure_value
-)
+button_value = tk.Button(frame_data, text="Nacitat aktualnu hodnotu", command=update_current_pressure_value)
 button_value.grid(column=0, row=0, padx=10, pady=10, sticky="W")
 
 current_time_text = tk.StringVar(frame_data)
 current_time_text.set("")
-current_time_label = tk.Entry(
-    frame_data, textvariable=current_time_text, state="disable", width=30
-)
+current_time_label = tk.Entry(frame_data, textvariable=current_time_text, state="disable", width=30)
 current_time_label.grid(column=1, row=2, padx=10, pady=10)
-button_time_get = tk.Button(
-    frame_data, text="Nacitat cas zo zariadenia", command=get_time
-)
+button_time_get = tk.Button(frame_data, text="Nacitat cas zo zariadenia", command=get_time)
 button_time_get.grid(column=0, row=2, padx=10, pady=10, sticky="W")
 
 
-button_timesync = tk.Button(
-    frame_data, text="Synchronizovat cas s PC", command=sync_time
-)
+button_timesync = tk.Button(frame_data, text="Synchronizovat cas s PC", command=sync_time)
 button_timesync.grid(column=0, row=3, padx=10, pady=10, columnspan=2)
 
 
 device_cadence_text = tk.StringVar(frame_data)
 device_cadence_text.set("")
-cadence_label_read = tk.Entry(
-    frame_data, width=30, textvariable=device_cadence_text, state="disabled"
-)
+cadence_label_read = tk.Entry(frame_data, width=30, textvariable=device_cadence_text, state="disabled")
 cadence_label_read.grid(column=1, row=4, padx=10, pady=10)
 cadence_get = tk.Button(frame_data, text="Nacitat periodu merania", command=get_cadence)
 cadence_get.grid(column=0, row=4, padx=10, pady=10, sticky="W")
@@ -163,27 +150,19 @@ cadence_get.grid(column=0, row=4, padx=10, pady=10, sticky="W")
 
 cadence_label = tk.Entry(frame_data, width=30)
 cadence_label.grid(column=0, row=5, padx=10, pady=10)
-cadence_set = tk.Button(
-    frame_data, text="Nastavit periodu merania\nFormat: H:M:S", command=set_cadence
-)
+cadence_set = tk.Button(frame_data, text="Nastavit periodu merania\nFormat: H:M:S", command=set_cadence)
 cadence_set.grid(column=1, row=5, padx=10, pady=10, sticky="W")
 
 
 current_samples = tk.StringVar(frame_data)
 current_samples.set("")
-current_samples_label = tk.Entry(
-    frame_data, textvariable=current_samples, state="disable", width=30
-)
+current_samples_label = tk.Entry(frame_data, textvariable=current_samples, state="disable", width=30)
 current_samples_label.grid(column=1, row=6, padx=10, pady=10)
-button_current_samples = tk.Button(
-    frame_data, text="Nacitat pocet zaznamov v archive", command=get_current_samples
-)
+button_current_samples = tk.Button(frame_data, text="Nacitat pocet zaznamov v archive", command=get_current_samples)
 button_current_samples.grid(column=0, row=6, padx=10, pady=10, sticky="W")
 
 
-button_deletearchive = tk.Button(
-    frame_data, text="Vymazat archiv zo zariadenia", command=delete_archive
-)
+button_deletearchive = tk.Button(frame_data, text="Vymazat archiv zo zariadenia", command=delete_archive)
 button_deletearchive.grid(column=0, row=7, padx=10, pady=10, columnspan=2)
 
 win.mainloop()

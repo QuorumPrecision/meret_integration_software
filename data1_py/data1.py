@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-from tkinter import messagebox
+import datetime
+import math
+import struct
+import tkinter as tk
+from pprint import pprint
+from tkinter import messagebox, ttk
+
 import serial
 import serial.tools.list_ports
-import struct
-from pprint import pprint
-import math
-import datetime
-import tkinter as tk
-from tkinter import ttk
 
 
 def checksum(by):
@@ -59,8 +59,8 @@ def get_time(ser, addr=255):
         day = ret[9]
         month = ret[10]
         year = struct.unpack(">H", ret[11:13])[0]
-        out = "{}:{}:{} {}.{}. {}".format(hour, minute, second, day, month, year)
-    except Exception as e:
+        out = f"{hour}:{minute}:{second} {day}.{month}. {year}"
+    except Exception:
         raise
     return out
 
@@ -126,9 +126,7 @@ def set_wakeup_time(ser, addr=255):
 
 def set_archive_interval(ser, addr=255, hours=0, minutes=0, seconds=5):
     print("Setting archive interval (how often to take a reading and save to archive)")
-    print(
-        "Setting to hours: {} minutes: {} seconds: {}".format(hours, minutes, seconds)
-    )
+    print(f"Setting to hours: {hours} minutes: {minutes} seconds: {seconds}")
     req = bytearray((0x55, addr, 0x00, 0x0A, 0x1F, 0x25, hours, minutes, seconds))
     req = req + checksum(req)
     for r in req:
@@ -180,13 +178,13 @@ def list_serial_ports():
         # print(port.description)
         # print(port.device)
         # print(port.name)
-        #if "VID" in port.hwid:
+        # if "VID" in port.hwid:
         SerialsList.append(port.device)
     return SerialsList
 
 
 def connect_serial(port="COM4"):
-    print("Connecting to serial port {}".format(port))
+    print(f"Connecting to serial port {port}")
     ser = serial.Serial(
         port=port,
         baudrate=9600,
@@ -205,13 +203,13 @@ def get_samples_count(ser, device_addr=255):
     ser.read(9999)  # clear serial buffer
     try:
         ser.write(req)
-    except Exception as e:
+    except Exception:
         print("Unable to download data from this COM port!")
         raise
     print("get_samples_count: Waiting for response from device")
     ret = ser.read(11)
     samples = struct.unpack("f", ret[6:10])[0]
-    print("Returned: {}".format(samples))
+    print(f"Returned: {samples}")
     if samples <= 0:
         raise Exception("Archiv v zarideni je prazdny!")
     return samples
@@ -220,26 +218,18 @@ def get_samples_count(ser, device_addr=255):
 def read_archive(ser, samples_available):
     archive = []
     segments = int(math.ceil(samples_available / 14.0))
-    print(
-        "Available records: {} Segments (14 records per segment): {}".format(
-            samples_available, segments
-        )
-    )
+    print(f"Available records: {samples_available} Segments (14 records per segment): {segments}")
     mem_addr = 6
     popup = tk.Toplevel()
     popup.title("Stahujem archiv...")
     progress_var = tk.DoubleVar()
-    progress_bar = ttk.Progressbar(
-        popup, variable=progress_var, maximum=segments, length=800
-    )
+    progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=segments, length=800)
     progress_bar.grid(row=1, column=0)
     popup.pack_slaves()
     seg = 0
     try:
         while seg < segments:
-            print(
-                "Reading segment {} / {} (mem_addr: {})".format(seg, segments, mem_addr)
-            )
+            print(f"Reading segment {seg} / {segments} (mem_addr: {mem_addr})")
             info = read_bytes_from_memory(ser, mem_addr)
             archive.extend(info)
             mem_addr = mem_addr + 140
@@ -258,9 +248,7 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
     records = []
     archive = []
     mem_addr_bytes = struct.pack("<f", mem_addr)
-    req = bytearray((0x55, device_addr, 0x00, 0x0B, 0x1E, 0x23)) + bytearray(
-        mem_addr_bytes
-    )
+    req = bytearray((0x55, device_addr, 0x00, 0x0B, 0x1E, 0x23)) + bytearray(mem_addr_bytes)
     req = req + checksum(req)
     if ser.in_waiting:
         ser.read(9999)
@@ -269,18 +257,18 @@ def read_bytes_from_memory(ser, mem_addr, device_addr=255):
 
     print("RX packet: ")
     for by in ret:
-        print("{:02X} ".format(by), end="")
+        print(f"{by:02X} ", end="")
     print()
     rx_chksum = checksum(ret[:-1])[0]
-    print("Checksum from packet: {:02X}".format(ret[-1]))
-    print("Calculated checksum:  {:02X}".format(rx_chksum))
+    print(f"Checksum from packet: {ret[-1]:02X}")
+    print(f"Calculated checksum:  {rx_chksum:02X}")
 
     if ret[-1] != rx_chksum:
         messagebox.showerror(
             "Error",
             "Problem stahovania dat z archivu - nesedi checksum! Skuste stiahnut archiv opat.",
         )
-        print("Calculated checksum: {}".format(rx_chksum))
+        print(f"Calculated checksum: {rx_chksum}")
         raise Exception("Checksum is not correct!")
 
     i = 6  # records starting on 6th byte of response
