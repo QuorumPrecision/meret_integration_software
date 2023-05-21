@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
-import time
 import struct
-from datetime import datetime
 import sys
+import time
+from datetime import datetime
+
 import serial
 
 
@@ -22,13 +23,9 @@ def calc_crc(data):
 
 
 def modbus_get_bytes(ser, funct, modbus_id, start_byte, count):
-    if funct == 0x44 or funct == 0x46:
+    if funct in (0x44, 0x46):
         count = int(count * 2)
-    req = (
-        bytearray((modbus_id, funct))
-        + start_byte.to_bytes(2, byteorder="big")
-        + count.to_bytes(2, byteorder="big")
-    )
+    req = bytearray((modbus_id, funct)) + start_byte.to_bytes(2, byteorder="big") + count.to_bytes(2, byteorder="big")
     req = calc_crc(req)
     # print("TX: " + req.hex())
     ser.write(req)
@@ -68,6 +65,9 @@ def modbus_get_uint16(ser, funct, modbus_id, start_byte):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("--port", help="Serial port", required=True)
+    parser.add_argument(
+        "--device_type", help="MERET Device type: BAP2 / BAT2 / PM121 / TM121 / PM102 / TM102", default="BAP2"
+    )
     parser.add_argument("--baudrate", help="Serial baudrate", default=9600)
     parser.add_argument("--parity", help="EVEN or NONE", default="NONE")
     parser.add_argument("--modbus_id", help="MODBUS ID", default=1, type=int)
@@ -88,39 +88,55 @@ if __name__ == "__main__":
         parity = serial.PARITY_NONE
 
     print("Software support: info@moirelabs.com  Version: 1.4  Author: MH")
+    print(f"Device type: {args.device_type}")
     print(
         "Connecting using serial port {}, parity: {}, baud: {}, cadence of measurement (ms): {}".format(
             port, parity, serial_baud, args.cadence_ms
         )
     )
     uart_timeout = 0.095
-    ser = serial.Serial(
-        port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout
-    )
+    try:
+        ser = serial.Serial(port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout)
+    except Exception:
+        print("Unable to open serial port")
+        sys.exit(1)
 
-    file_name = "{}.csv".format(int(time.time()))
-    print("Saving to file: {}".format(file_name))
-    f = open(file_name, "w", encoding="utf-8")
+    file_name = f"{int(time.time())}.csv"
+    print(f"Saving to file: {file_name}")
+    f = open(file_name, "w", encoding="utf-8")  # pylint: disable=consider-using-with
 
     primary_unit = 255
     primary_multiplier = 255
-    try:
-        primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562)
-        primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
-    except Exception as e:
-        print("Unable to detect measurement unit")
 
-    if primary_unit == 5 and primary_multiplier == 11:
-        unit = "kPa"
-    elif primary_unit == 1 and primary_multiplier == 0:
-        unit = "C"
-    elif primary_unit == 1 and primary_multiplier == 1:
-        unit = "atto C"
-    else:
-        unit = f"unknown unit ({primary_unit} / {primary_multiplier})"
+    if args.device_type in ("MB12", "BAP2", "BAT2"):
+        try:
+            primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562)
+            primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
+        except Exception:
+            print("Unable to detect measurement unit")
+        if primary_unit == 5 and primary_multiplier == 11:
+            unit = "kPa"
+        elif primary_unit == 1 and primary_multiplier == 0:
+            unit = "C"
+        else:
+            unit = f"unknown unit for {args.device_type} (unit: {primary_unit}, multiplier: {primary_multiplier})"
+    if args.device_type in ("MB21", "PM121", "TM121", "MB63", "MB72", "PM102", "TM102"):
+        try:
+            primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14549)
+            primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14548)
+        except Exception:
+            print("Unable to detect measurement unit")
+        if primary_unit == 5 and primary_multiplier == 11:
+            unit = "kPa"
+        elif primary_unit == 1 and primary_multiplier == 0:
+            unit = "C"
+        else:
+            unit = f"unknown unit for {args.device_type} (unit: {primary_unit}, multiplier: {primary_multiplier})"
+    if args.device_type in ("MB0101"):
+        unit = ""
 
     sleep_for = (args.cadence_ms / 1000) - uart_timeout
-    print(f"Requested cadency:         {args.cadence_ms:.3f}s")
+    print(f"Requested cadency:         {args.cadence_ms / 1000:.3f}s")
     print(f"Device to respond timeout: {uart_timeout:.3f}s")
     print(f"Sleeping between requests: {sleep_for:.3f}s")
 
@@ -128,12 +144,11 @@ if __name__ == "__main__":
         i = {}
         try:
             i["primary_value"] = round(modbus_get_float(ser, 0x03, modbus_id, 0x09), 3)
-        except Exception as e:
+        except Exception:
             print("Unable to read data from sensor!")
+            time.sleep(sleep_for / 2)
             continue
-        data = "{},{},{},{}\n".format(
-            datetime.now().isoformat(), time.time(), i["primary_value"], unit
-        )
+        data = "{},{},{},{}\n".format(datetime.now().isoformat(), time.time(), i["primary_value"], unit)
         f.write(data)
         f.flush()
         print(data, end="")
