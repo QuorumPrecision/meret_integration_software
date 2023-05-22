@@ -75,7 +75,7 @@ if __name__ == "__main__":
         "--cadence_ms",
         help="How many milliseconds apart to request measurement",
         type=float,
-        default=1,
+        default=1000,
     )
     args = parser.parse_args()
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             port, parity, serial_baud, args.cadence_ms
         )
     )
-    uart_timeout = 0.095
+    uart_timeout = 1.0
     try:
         ser = serial.Serial(port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout)
     except Exception:
@@ -135,10 +135,22 @@ if __name__ == "__main__":
     if args.device_type in ("MB0101"):
         unit = ""
 
+    print(f"Primary unit read from device: {primary_unit}")
+    print(f"Primary multiplier read from device: {primary_multiplier}")
+
+    ser.close()
+    time.sleep(1)
+
+    uart_timeout = 0.095
     sleep_for = (args.cadence_ms / 1000) - uart_timeout
     print(f"Requested cadency:         {args.cadence_ms / 1000:.3f}s")
     print(f"Device to respond timeout: {uart_timeout:.3f}s")
     print(f"Sleeping between requests: {sleep_for:.3f}s")
+    try:
+        ser = serial.Serial(port=port, baudrate=serial_baud, parity=parity, timeout=uart_timeout)
+    except Exception:
+        print("Unable to open serial port")
+        sys.exit(1)
 
     while True:
         i = {}
