@@ -27,10 +27,12 @@ def modbus_get_bytes(ser, funct, modbus_id, start_byte, count):
         count = int(count * 2)
     req = bytearray((modbus_id, funct)) + start_byte.to_bytes(2, byteorder="big") + count.to_bytes(2, byteorder="big")
     req = calc_crc(req)
-    # print("TX: " + req.hex())
+    if args.verbose:
+        print("TX: " + req.hex())
     ser.write(req)
     ret = ser.read(count * 2 + 5)
-    # print("RX: " + ret.hex())
+    if args.verbose:
+        print("RX: " + ret.hex())
     return ret[3:][:-2]
 
 
@@ -68,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--device_type", help="MERET Device type: BAP2 / BAT2 / PM121 / TM121 / PM102 / TM102", default="BAP2"
     )
-    parser.add_argument("--baudrate", help="Serial baudrate", default=9600)
+    parser.add_argument("--baudrate", help="Serial baudrate", default=9600, type=int)
     parser.add_argument("--parity", help="EVEN or NONE", default="NONE")
     parser.add_argument("--modbus_id", help="MODBUS ID", default=1, type=int)
     parser.add_argument(
@@ -77,6 +79,7 @@ if __name__ == "__main__":
         type=float,
         default=1000,
     )
+    parser.add_argument("--verbose", help="Verbose output", action="store_true")
     args = parser.parse_args()
 
     port = args.port
@@ -141,7 +144,10 @@ if __name__ == "__main__":
     ser.close()
     time.sleep(1)
 
-    uart_timeout = 0.095
+    if args.baudrate == 115200:
+        uart_timeout = 0.010
+    else:
+        uart_timeout = 0.095
     sleep_for = (args.cadence_ms / 1000) - uart_timeout
     print(f"Requested cadency:         {args.cadence_ms / 1000:.3f}s")
     print(f"Device to respond timeout: {uart_timeout:.3f}s")
