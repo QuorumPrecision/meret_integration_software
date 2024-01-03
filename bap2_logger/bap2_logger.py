@@ -22,44 +22,44 @@ def calc_crc(data):
     return data + crc.to_bytes(2, byteorder="little")
 
 
-def modbus_get_bytes(ser, funct, modbus_id, start_byte, count):
+def modbus_get_bytes(ser, funct, modbus_id, start_byte, count, verbose):  # pylint: disable=too-many-arguments
     if funct in (0x44, 0x46):
         count = int(count * 2)
     req = bytearray((modbus_id, funct)) + start_byte.to_bytes(2, byteorder="big") + count.to_bytes(2, byteorder="big")
     req = calc_crc(req)
-    if args.verbose:
+    if verbose:
         print("TX: " + req.hex())
     ser.write(req)
     ret = ser.read(count * 2 + 5)
-    if args.verbose:
+    if verbose:
         print("RX: " + ret.hex())
     return ret[3:][:-2]
 
 
-def modbus_get_uint8(ser, funct, modbus_id, start_byte):
+def modbus_get_uint8(ser, funct, modbus_id, start_byte, verbose):
     count = 0.5
-    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count)
+    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count, verbose)
     ret = struct.unpack("B", ret)[0]
     return ret
 
 
-def modbus_get_float(ser, funct, modbus_id, start_byte):
+def modbus_get_float(ser, funct, modbus_id, start_byte, verbose):
     count = 2
-    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count)
+    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count, verbose)
     ret = struct.unpack("f", ret)[0]
     return ret
 
 
-def modbus_get_uint32(ser, funct, modbus_id, start_byte):
+def modbus_get_uint32(ser, funct, modbus_id, start_byte, verbose):
     count = 2
-    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count)
+    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count, verbose)
     ret = struct.unpack("I", ret)[0]
     return ret
 
 
-def modbus_get_uint16(ser, funct, modbus_id, start_byte):
+def modbus_get_uint16(ser, funct, modbus_id, start_byte, verbose):
     count = 1
-    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count)
+    ret = modbus_get_bytes(ser, funct, modbus_id, start_byte, count, verbose)
     ret = struct.unpack("H", ret)[0]
     return ret
 
@@ -113,8 +113,8 @@ if __name__ == "__main__":
 
     if args.device_type in ("MB12", "BAP2", "BAT2"):
         try:
-            primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562)
-            primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561)
+            primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14562, args.verbose)
+            primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14561, args.verbose)
         except Exception:
             print("Unable to detect measurement unit")
         if primary_unit == 5 and primary_multiplier == 11:
@@ -125,8 +125,8 @@ if __name__ == "__main__":
             unit = f"unknown unit for {args.device_type} (unit: {primary_unit}, multiplier: {primary_multiplier})"
     if args.device_type in ("MB21", "PM121", "TM121", "MB63", "MB72", "PM102", "TM102"):
         try:
-            primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14549)
-            primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14548)
+            primary_unit = modbus_get_uint8(ser, 0x44, modbus_id, 14549, args.verbose)
+            primary_multiplier = modbus_get_uint8(ser, 0x44, modbus_id, 14548, args.verbose)
         except Exception:
             print("Unable to detect measurement unit")
         if primary_unit == 5 and primary_multiplier == 11:
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     while True:
         i = {}
         try:
-            i["primary_value"] = round(modbus_get_float(ser, 0x03, modbus_id, 0x09), 3)
+            i["primary_value"] = round(modbus_get_float(ser, 0x03, modbus_id, 0x09, args.verbose), 3)
         except Exception:
             print("Unable to read data from sensor!")
             time.sleep(sleep_for / 2)
