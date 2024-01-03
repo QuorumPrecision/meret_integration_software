@@ -18,7 +18,7 @@ def calc_crc(data):
     crc = 0xFFFF
     for pos in data:
         crc ^= pos
-        for i in range(8):
+        for _ in range(8):
             if (crc & 1) != 0:
                 crc >>= 1
                 crc ^= 0xA001
