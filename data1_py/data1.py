@@ -31,9 +31,7 @@ def get_pressure(ser, addr=255):
 
 
 def get_device_serial(ser, addr=255):
-    # req = bytearray((0x55, addr, 0x00, 0x06, 0x01))
     req = bytearray((0x55, addr, 0x00, 0x06, 0x02))
-    # req = bytearray((0x55, addr, 0x00, 0x06, 0x03))
     req = req + checksum(req)
     ser.write(req)
     ret = ser.read(50)

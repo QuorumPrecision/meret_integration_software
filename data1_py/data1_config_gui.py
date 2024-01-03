@@ -6,9 +6,6 @@ from tkinter import messagebox
 import data1
 import serial
 
-# from turtle import width
-
-
 connect_serial_state = False
 ser = None
 
