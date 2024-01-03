@@ -17,7 +17,7 @@ find . -name "*.py" | xargs dos2unix
 find . -name "*.py" | xargs $python -m isort
 find . -name "*.py" | xargs $python -m black -l 120
 find . -name "*.py" | xargs $python -m flake8 --extend-ignore=E203,E402,F403,F401 --max-line-length 999
-find . -name "*.py" | xargs $python -m pyupgrade --py38-plus
+find . -name "*.py" | xargs $python -m pyupgrade --py311-plus
 find . -name "*.py" | xargs $python -m pylint --disable=line-too-long,broad-except,W,C,duplicate-code
 $python -m ruff .
 

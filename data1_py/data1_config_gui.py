@@ -94,7 +94,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Configurator 2.0.2")
+win.title("Data1 Configurator 2.0.3")
 
 frame_connection = tk.LabelFrame(win, text="Pripojenie")
 frame_connection.grid(column=0, row=0, padx=10, pady=10, sticky="N")

@@ -33,9 +33,7 @@ def download_and_save_archive():
                 ("CSV subor", ".csv"),
             ],
             mode="w",
-            defaultextension=[
-                ("CSV subor", ".csv"),
-            ],
+            defaultextension=".csv",
             initialfile=f"{serial_number}.csv",
         )
         if outfile is None:  # asksaveasfile return `None` if dialog closed with "cancel".
@@ -124,7 +122,7 @@ if len(SerialsList) < 1:
 
 win = tk.Tk()
 win.geometry("+2+2")
-win.title("Data1 Archive Reader 2.2.5")
+win.title("Data1 Archive Reader 2.2.6")
 win.resizable(False, False)
 
 buttonFontLarge = tkinter.font.Font(size=20, weight="bold")
