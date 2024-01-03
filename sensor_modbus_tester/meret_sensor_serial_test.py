@@ -122,7 +122,7 @@ def list_serial_ports():
 SerialsList = list_serial_ports()
 if len(SerialsList) < 1:
     messagebox.showerror("Chyba", "Seriove porty nenajdene")
-    sys.exit()
+    sys.exit(1)
 
 
 if __name__ == "__main__":
