@@ -10,3 +10,7 @@ for some legacy implementations.
 ## data1 ##
 
 Configuration and archive utilities (with GUI) for old Meret MAM sensors made in 2006 - 2010 at least
+
+# Development
+
+Packed / tested against Python 3.11 on Windows 10
